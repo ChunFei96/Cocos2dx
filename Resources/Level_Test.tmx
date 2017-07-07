@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="2017.05.23" orientation="orthogonal" renderorder="right-down" width="39" height="20" tilewidth="50" tileheight="50" nextobjectid="4">
+ <tileset firstgid="1" source="background.tsx"/>
+ <tileset firstgid="2" source="tileset.tsx"/>
+ <layer name="background" width="39" height="20" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJztzjENAAAIA7Dh3zQvwcCeVkETAACgadqB418WDNwAAw==
+  </data>
+ </layer>
+ <objectgroup name="Object">
+  <object id="1" name="SpawnPoint" x="532" y="364">
+   <ellipse/>
+  </object>
+  <object id="2" x="520" y="640" width="2.66667" height="1.33333">
+   <ellipse/>
+  </object>
+  <object id="3" name="NextLevel" x="1896" y="896" width="21.3333" height="13.3333">
+   <ellipse/>
+  </object>
+ </objectgroup>
+ <layer name="level" width="39" height="20">
+  <data encoding="base64" compression="zlib">
+   eJxjYBicwJIGZopSyRxauE0RiD3JxMjuoZXbyAWjbiMP0MNt6OkIGeCTw+Y2auUtSgG620BuR/crMgDxVaEYXY7WbmNgIJxGLBloE/8gkM2A8Ptgcls2HnMH0m0wd1HLbRlUwsjuopbbdKmELRmwu02VATXtWUGx3iBwG7qdxIDB5DY3BtSwHExuw6aOmm6bDjXXnUj7B8JtwQTsLQXiTAIY5jYQO5YI9dTCALA5SC8=
+  </data>
+ </layer>
+</map>
