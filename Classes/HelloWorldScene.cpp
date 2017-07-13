@@ -3,19 +3,19 @@
 #include "LightEffect.h"
 #include "EffectSprite.h"
 
+#define COCOS2D_DEBUG 1
+#define PTM_RATIO 50.0
 USING_NS_CC;
 
 Scene* HelloWorld::createScene()
 {
 	// 'scene' is an autorelease object
-	auto scene = Scene::create();
+	auto scene = Scene::createWithPhysics();
 
 	// 'layer' is an autorelease object
 	auto layer = HelloWorld::create();
 	// add layer as a child to scene
 	scene->addChild(layer, 0, 999);
-
-
 
 	// return the scene
 	return scene;
@@ -31,8 +31,8 @@ bool HelloWorld::init()
 		return false;
 	}
 
-	
-	audioInit();
+
+	//audioInit();
 
 	lightInit();
 
@@ -40,11 +40,203 @@ bool HelloWorld::init()
 
 	backgroundInit();
 
-	GameMap.init("Level_Test.tmx");
+	GameMap = new TileMap();
+
+	GameMap->init("Level_test.tmx");
 
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 
-	worldSize = GameMap.GetSize();
+	worldSize = GameMap->GetSize();
+
+	Vec2 SpawnPoint = GameMap->GetObjectPosition("Object", "SpawnPoint");
+	this->addChild(GameMap->getMap(), 1);
+
+	// Character
+	mainChar.init("Idle__000.png", "spriteNode", SpawnPoint.x, SpawnPoint.y, worldSize);
+	//mainChar.setPlayerPosition(mainChar.getPos(), GameMap, GameMap->getMeta(), GameMap->getMap());
+	this->addChild(mainChar.getSprite(), 3);
+	//this->setViewPointCenter(mainChar.getPos());
+
+	//// box2d init
+	//// Create a world
+	//b2Vec2 gravity = b2Vec2(0.0f, 0.0f);
+	//_world = new b2World(gravity);
+
+	//// Create edges around the entire screen
+	//b2BodyDef groundBodyDef;
+	//groundBodyDef.position.Set(0, 0);
+	//_groundBody = _world->CreateBody(&groundBodyDef);
+
+	//b2EdgeShape groundBox;
+	//b2FixtureDef groundBoxDef;
+	//groundBoxDef.shape = &groundBox;
+
+	//groundBox.Set(b2Vec2(0, 0), b2Vec2(visibleSize.width / PTM_RATIO, 0));
+	//_bottomFixture = _groundBody->CreateFixture(&groundBoxDef);
+
+	//groundBox.Set(b2Vec2(0, 0), b2Vec2(0, visibleSize.height / PTM_RATIO));
+	//_groundBody->CreateFixture(&groundBoxDef);
+
+	//groundBox.Set(b2Vec2(0, visibleSize.height / PTM_RATIO), b2Vec2(visibleSize.width / PTM_RATIO,
+	//	visibleSize.height / PTM_RATIO));
+	//_groundBody->CreateFixture(&groundBoxDef);
+
+	//groundBox.Set(b2Vec2(visibleSize.width / PTM_RATIO, visibleSize.height / PTM_RATIO),
+	//	b2Vec2(visibleSize.width / PTM_RATIO, 0));
+	//_groundBody->CreateFixture(&groundBoxDef);
+
+	//// Create sprite and add it to the layer
+	//CCSprite *ball = Sprite::create("ball.png");
+	//ball->setPosition(100, 100);
+	//ball->setTag(1);
+
+	//// Create ball body 
+	//b2BodyDef ballBodyDef;
+	//ballBodyDef.type = b2_dynamicBody;
+	//ballBodyDef.position.Set(100 / PTM_RATIO, 100 / PTM_RATIO);
+	//ballBodyDef.userData = ball;
+	//b2Body * ballBody = _world->CreateBody(&ballBodyDef);
+
+	//// Create circle shape
+	//b2CircleShape circle;
+	//circle.m_radius = 26.0 / PTM_RATIO;
+
+	//// Create shape definition and add to body
+	//b2FixtureDef ballShapeDef;
+	//ballShapeDef.shape = &circle;
+	//ballShapeDef.density = 1.0f;
+	//ballShapeDef.friction = 0.f;
+	//ballShapeDef.restitution = 1.0f;
+	//_ballFixture = ballBody->CreateFixture(&ballShapeDef);
+
+	//b2Vec2 force = b2Vec2(10, 10);
+	//ballBody->ApplyLinearImpulse(force, ballBodyDef.position,true);
+
+	//this->addChild(ball);
+	//// box2d init
+
+	//GameMap->Metainit("Meta");
+
+	// Define the gravity vector.
+	b2Vec2 gravity;
+	gravity.Set(0.0f, -9.8f);//No gravity
+
+	bool doSleep = true; // Do we want to let bodies sleep?
+
+	// create a world object, which will hold and simulate the rigid bodies.
+	_world = new b2World(gravity);
+	_world->SetAllowSleeping(false);
+	_world->SetContactListener(&contactlistner);
+
+	b2CircleShape circle;
+	circle.m_radius = 26.0 / PTM_RATIO;
+
+	b2PolygonShape rect;
+	rect.SetAsBox(60 / PTM_RATIO / 2,
+		76 / PTM_RATIO / 2);
+
+
+	// Create sprite and add it to the layer
+	//CCSprite *ball = Sprite::create("ball.png");
+	//ball->setPosition(mainChar.getPos().x, mainChar.getPos().y);
+	//ball->setTag(1);
+	//this->addChild(ball,5);
+
+	// Create body definition 
+	b2BodyDef playerBodyDef;
+	playerBodyDef.type = b2_dynamicBody;
+	playerBodyDef.position.Set(mainChar.getPos().x/ PTM_RATIO, mainChar.getPos().y / PTM_RATIO);
+	playerBodyDef.userData = mainChar.getSprite();
+	playerBodyDef.fixedRotation = true;
+	playerBody = _world->CreateBody(&playerBodyDef);
+
+	// Create shape definition and add to body
+	b2FixtureDef playerFixtureDef;
+	playerFixtureDef.shape = &circle;
+	playerFixtureDef.density = 10.0f;
+	playerFixtureDef.friction = 0.2f;
+	playerFixtureDef.restitution = 0.0f;
+
+	_playerFixture = playerBody->CreateFixture(&playerFixtureDef);
+
+	// add foot sensor fixture
+	//rect.SetAsBox(0.3, 0.3, b2Vec2(0, -2), 0);
+	//circle.m_radius = 13.0;
+	playerFixtureDef.isSensor = true;
+	b2Fixture* footSensorFixture = playerBody->CreateFixture(&playerFixtureDef);
+	footSensorFixture->SetUserData((void*)3);
+
+	/*b2PolygonShape paddleShape;
+	paddleShape.SetAsBox(
+		mainChar.getSprite()->getContentSize().width * this->getScale(),
+		mainChar.getSprite()->getContentSize().height * this->getScale()
+	);*/
+
+	
+
+	
+	
+	/*b2Vec2 force = b2Vec2(10, 0);
+	_paddleBody->ApplyLinearImpulse(force, paddleBodyDef2.position,true);*/
+
+	// boundary
+	// Create edges around the entire screen
+	b2BodyDef groundBodyDef;
+	groundBodyDef.position.Set(0, 0);
+
+	b2Body *groundBody = _world->CreateBody(&groundBodyDef);
+	b2EdgeShape groundEdge;
+	b2FixtureDef boxShapeDef;
+	boxShapeDef.shape = &groundEdge;
+
+	//wall definitions
+	/*groundEdge.Set(b2Vec2(0, 0), b2Vec2(visibleSize.width / PTM_RATIO, 0));
+	groundBody->CreateFixture(&boxShapeDef);*/
+
+	// left wall
+	groundEdge.Set(b2Vec2(0, 0), b2Vec2(0, visibleSize.height / PTM_RATIO));
+	groundBody->CreateFixture(&boxShapeDef);
+
+	// top wall
+	groundEdge.Set(b2Vec2(0, 1000 / PTM_RATIO),
+		b2Vec2(visibleSize.width / PTM_RATIO, 1000 / PTM_RATIO));
+	groundBody->CreateFixture(&boxShapeDef);
+
+	/*groundEdge.Set(b2Vec2(visibleSize.width / PTM_RATIO, visibleSize.height / PTM_RATIO),
+		b2Vec2(visibleSize.width / PTM_RATIO, 0));
+	groundBody->CreateFixture(&boxShapeDef);*/
+
+	//b2Body *_paddleBody2;
+	prepareLayers(GameMap);
+
+	
+
+	//// Create paddle and add it to the layer
+	//CCSprite *paddle = CCSprite::create("Blue_Front1.png");
+	//paddle->setPosition(mainChar.getPos().x, 100);
+	//this->addChild(paddle,4);
+
+	//// Create paddle body
+	//b2BodyDef paddleBodyDef;
+	//paddleBodyDef.type = b2_staticBody;
+	//paddleBodyDef.position.Set(paddle->getPosition().x / PTM_RATIO, paddle->getPosition().y / PTM_RATIO);
+	//paddleBodyDef.userData = paddle;
+	//_paddleBody = _world->CreateBody(&paddleBodyDef);
+
+	//// Create paddle shape
+	//b2PolygonShape paddleShape;
+	//paddleShape.SetAsBox(paddle->getContentSize().width / PTM_RATIO / 2,
+	//	paddle->getContentSize().height / PTM_RATIO / 2);
+
+	//// Create shape definition and add to body
+	//b2FixtureDef paddleShapeDef2;
+	//paddleShapeDef2.shape = &paddleShape;
+	//paddleShapeDef2.density = 10.0f;
+	//paddleShapeDef2.friction = 0.4f;
+	//paddleShapeDef2.restitution = 0.1f;
+	//_paddleFixture2 = _paddleBody->CreateFixture(&paddleShapeDef2);
+
+
 
 	// Mr Wee shader code
 	proPostProcess = GLProgram::createWithFilenames("Basic.vsh", "CharEffect.fsh");
@@ -73,16 +265,25 @@ bool HelloWorld::init()
 	this->addChild(rendtexSprite, 2);
 
 	
-	Vec2 SpawnPoint = GameMap.GetObjectPosition("Object", "SpawnPoint");
-	this->addChild(GameMap.getMap(), 1);
 
-	// Character
-	mainChar.init("Idle__000.png", "spriteNode", SpawnPoint.x, SpawnPoint.y, worldSize);
-	this->addChild(mainChar.getSprite(), 3);
+	//// create player physics body
+	//auto physicsBody = PhysicsBody::createBox(Size(mainChar.getSprite()->getContentSize().width, 
+	//	mainChar.getSprite()->getContentSize().height), PhysicsMaterial(0.1f, 0.5f,0.0f));
+	//physicsBody->setDynamic(true);
+	//mainChar.getSprite()->addComponent(physicsBody);
+
+	/*Sprite* mytest = Sprite::create("Blue_Front1.png");
+	mytest->setPosition(mainChar.getPos() - Vec2(0,100));
+	this->addChild(mytest);
+
+	auto physicsBody2 = PhysicsBody::createBox(Size(mytest->getContentSize().width,
+		mytest->getContentSize().height), PhysicsMaterial(0.1f, 0.5f, 0.0f));
+	physicsBody2->setDynamic(false);
+	mytest->addComponent(physicsBody2);*/
 	
 	// camera
-	//this->runAction(CCFollow::create(rendtexSprite, GameMap.getMap()->boundingBox()));
-	this->runAction(CCFollow::create(mainChar.getSprite(), GameMap.getMap()->boundingBox()));
+	//this->runAction(CCFollow::create(rendtexSprite, GameMap->getMap()->boundingBox()));
+	this->runAction(CCFollow::create(mainChar.getSprite(), GameMap->getMap()->boundingBox()));
 
 	//// 
 	//for (int i = 0; ; i++)
@@ -102,7 +303,7 @@ bool HelloWorld::init()
 	//break;
 	//}
 	//}
-
+	playerMove = true;
 	
 	//input
 	mainInput.initChar(&mainChar);
@@ -111,9 +312,54 @@ bool HelloWorld::init()
 	auto listener = EventListenerKeyboard::create();
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(mainInput.setupKeyboardInput(listener), this);
 
-	
 	this->scheduleUpdate();
 	return true;
+}
+
+//void HelloWorld::setPlayerPosition(Vec2 playerpos, double delta)
+//{
+//	CCPoint tileCoord = GameMap->tileCoordForPosition(playerpos);
+//	int tileGid = GameMap->getMeta()->tileGIDAt(tileCoord);
+//	if (tileGid) {
+//
+//		ValueMap properties = GameMap->getMap()->propertiesForGID(tileGid).asValueMap();
+//		if (properties.size() > 0) {
+//			
+//			Sprite* testing = Sprite::create("Blue_Front1.png");
+//			testing->setPosition(Vec2(100, 100));
+//			this->addChild(testing);
+//			//mainChar.updateMovement(delta);
+//			//playerMove = false;
+//		}
+//		else
+//		{
+//			Sprite* testing2 = Sprite::create("Blue_Back1.png");
+//			testing2->setPosition(Vec2(100, 100));
+//			this->addChild(testing2);
+//			
+//		}
+//			//mainChar.updateMovement(delta);
+//
+//	}
+//	//mainChar.updateMovement(delta);
+//	mainChar.getSprite()->setPosition(playerpos);
+//
+//}
+
+
+void HelloWorld::setViewPointCenter(CCPoint position) {
+
+	CCSize winSize = CCDirector::sharedDirector()->getWinSize();
+
+	int x = MAX(position.x, winSize.width / 2);
+	int y = MAX(position.y, winSize.height / 2);
+	x = MIN(x, (GameMap->getMap()->getMapSize().width * this->GameMap->getMap()->getTileSize().width) - winSize.width / 2);
+	y = MIN(y, (GameMap->getMap()->getMapSize().height * GameMap->getMap()->getTileSize().height) - winSize.height / 2);
+	CCPoint actualPosition = ccp(x, y);
+
+	CCPoint centerOfView = ccp(winSize.width / 2, winSize.height / 2);
+	CCPoint viewPoint = ccpSub(centerOfView, actualPosition);
+	this->setPosition(viewPoint);
 }
 
 void HelloWorld::lightInit()
@@ -126,7 +372,6 @@ void HelloWorld::lightInit()
 	//_effect->setLightColor(cocos2d::Color3B::BLUE);
 
 }
-
 void HelloWorld::moonlightInit()
 {
 	//_moonlightPos = Vec3(worldSize.width - 200, worldSize.height - 200, 100);
@@ -241,12 +486,58 @@ void HelloWorld::lightUpdate(float dt)
 	
 }
 
-
 void HelloWorld::update(float delta)
 {
+	
 	mainChar.Update(delta);
-
+	//setPlayerPosition(mainChar.getPos(),delta);
 	lightUpdate(delta);
+	//mainChar.setPlayerPosition(mainChar.getPos(), GameMap, delta);
+	//mainChar.UpdateJumpUpwards(mainChar.getPos(), GameMap, delta);
+	//mainChar.UpdateFreeFall(mainChar.getPos(), GameMap, delta);
+	mainChar.updateMovement(delta, GameMap,playerBody, _playerFixture,contactlistner);
+
+	int velocityIterations = 8;
+	int positionIterations = 1;
+
+
+	// Instruct the world to perform a single step of simulation. It is
+	// generally best to keep the time step and iterations fixed.
+	_world->Step(delta, velocityIterations, positionIterations);
+
+	bool blockFound = false;
+
+	// Iterate over the bodies in the physics world
+	for (b2Body* b = _world->GetBodyList(); b; b = b->GetNext())
+	{
+		if (b->GetUserData() != NULL) {
+			// Synchronize the AtlasSprites position and rotation with the corresponding body
+			CCSprite* myActor = (CCSprite*)b->GetUserData();
+			myActor->setPosition(CCPointMake(b->GetPosition().x * PTM_RATIO  , b->GetPosition().y * PTM_RATIO));
+			//myActor->setRotation(-1 * CC_RADIANS_TO_DEGREES(b->GetAngle()));
+
+			if (myActor->getTag() == 1)
+			{
+				static int maxSpeed = 10;
+
+				b2Vec2 velocity = b->GetLinearVelocity();
+				float32 speed = velocity.Length();
+
+				if (speed > maxSpeed) {
+					b->SetLinearDamping(0.5);
+				}
+				else if (speed < maxSpeed) {
+					b->SetLinearDamping(0.0);
+				}
+
+			}
+
+			if (myActor->getTag() == 2) {
+				blockFound = true;
+			}
+
+		}
+	}
 
 	/*rendtex->beginWithClear(0.0f, 0.0f, 0.0f, 0.0f);
 	
@@ -282,3 +573,166 @@ void HelloWorld::menuCloseCallback(Ref* pSender)
 
 
 }
+
+enum
+{
+	kFilterCategoryLevel = 0x01,
+	kFilterCategorySolidObject = 0x02,
+	kFilterCategoryNonSolidObject = 0x04
+};
+
+void HelloWorld::prepareLayers(TileMap* GameMap)
+{
+	for (auto& Object : GameMap->getMap()->getChildren())
+	{
+		auto layer = dynamic_cast<TMXLayer*>(Object);
+		if (layer != nullptr)
+			this->createFixtures(layer, GameMap);
+	}
+}
+//
+const float kPixelsPerMeter = 50.0f;
+const float kGravity = -kPixelsPerMeter / 0.7f; // adjust this to taste
+//void HelloWorld::createPhysicalWorld()
+//{
+//	world = new b2World(b2Vec2(0.0f, kGravity));
+//	world->SetAllowSleeping(true);
+//	world->SetContinuousPhysics(true);
+//	//world->SetContactListener(this);
+//}
+
+//
+//void HelloWorld::addObjects(TileMap* GameMap)
+//{
+//	// loop over the object groups in this tmx file
+//	auto objectGroups = GameMap->getMap()->getObjectGroups();
+//	for (auto& objectGroup : objectGroups)
+//	{
+//		auto objects = objectGroup->getObjects();
+//		for (auto& object : objects)
+//		{
+//			auto properties = object.asValueMap();
+//			auto type = properties.at("type");
+//			if (!type.isNull())
+//			{
+//				this->addObject(type.asString().c_str(), properties);
+//			}
+//		}
+//	}
+//}
+//
+void HelloWorld::createFixtures(CCTMXLayer * layer, TileMap* GameMap)
+{
+	// create all the rectangular fixtures for each tile
+	Size layerSize = layer->getLayerSize();
+	for (int y = 0; y < layerSize.height; y++)
+	{
+		for (int x = 0; x < layerSize.width; x++)
+		{
+			// create a fixture if this tile has a sprite
+			auto tileSprite = layer->getTileAt(Point(x, y));
+			if (tileSprite)
+			{
+				this->createRectangularFixture(layer, x, y, 1.1f, 1.1f, GameMap);
+			}
+
+		}
+
+	}
+}
+//
+void HelloWorld::createRectangularFixture(TMXLayer* layer, int x, int y, float width, float height,TileMap* GameMap)
+{
+	// get position & size
+	auto p = (layer->getPositionAt(Point(x, y))) - Vec2(25,33);
+	auto tileSize = GameMap->getMap()->getTileSize();
+	const float pixelsPerMeter = 50.0f;
+
+	// note: creating the 'world' member variable
+	// is discussed in the next chapter
+
+	// create the body
+	b2BodyDef bodyDef;
+	bodyDef.type = b2_staticBody;
+	bodyDef.position.Set(
+		(p.x + (tileSize.width / 2.0f)) / pixelsPerMeter,
+		(p.y + (tileSize.height / 2.0f)) / pixelsPerMeter
+	);
+	b2Body* body = _world->CreateBody(&bodyDef);
+
+	// define the shape
+	b2PolygonShape shape;
+	shape.SetAsBox(
+		(tileSize.width / pixelsPerMeter) * 0.4f * width,
+		(tileSize.height / pixelsPerMeter) * 0.6f * height
+	);
+
+	// create the fixture
+	b2FixtureDef fixtureDef;
+	fixtureDef.shape = &shape;
+	fixtureDef.density = 1.0f;
+	fixtureDef.friction = 0.3f;
+	fixtureDef.restitution = 0.0f;
+	fixtureDef.filter.categoryBits = kFilterCategoryLevel;
+	fixtureDef.filter.maskBits = 0xffff;
+	body->CreateFixture(&fixtureDef);
+}
+
+
+
+//void HelloWorld::addBodyToWorld(b2World* world)
+//{
+//	// add a dynamic body to world
+//	// (subclasses can use other body types by overriding
+//	// this method and calling body->SetType())
+//	b2BodyDef bodyDef;
+//	bodyDef.type = b2_dynamicBody;
+//	//bodyDef.position.Set(
+//	//	//this->getPositionX() / kPixelsPerMeter,
+//	//	//this->getPositionY() / kPixelsPerMeter
+//	//);
+//	bodyDef.userData = this;
+//	bodyDef.fixedRotation = true;
+//	this->body = world->CreateBody(&bodyDef);
+//}
+//
+//
+//void HelloWorld::createFixture(b2Shape* shape)
+//{
+//	// note that friction, etc. can be modified later by looping
+//	// over the body's fixtures and calling fixture->SetFriction()
+//	b2FixtureDef fixtureDef;
+//	fixtureDef.shape = shape;
+//	fixtureDef.density = 1.0f;
+//	fixtureDef.friction = 0.7f;
+//	fixtureDef.restitution = 0.1f;
+//	fixtureDef.filter.categoryBits = kFilterCategorySolidObject;
+//	fixtureDef.filter.maskBits = 0xffff;
+//	this->body->CreateFixture(&fixtureDef);
+//}
+//
+//void HelloWorld::addCircularFixtureToBody(float radius)
+//{
+//	b2CircleShape shape;
+//	shape.m_radius = radius * this->getScale();
+//	this->createFixture(&shape);
+//}
+//
+//void HelloWorld::addRectangularFixtureToBody(float width, float height)
+//{
+//	b2PolygonShape shape;
+//	shape.SetAsBox(
+//		width * this->getScale(),
+//		height * this->getScale()
+//	);
+//	this->createFixture(&shape);
+//}
+//
+//void HelloWorld::setProperties(ValueMap& properties)
+//{
+//	this->setPosition(Point(
+//		properties["x"].asFloat(),
+//		properties["y"].asFloat()
+//	));
+//}
+

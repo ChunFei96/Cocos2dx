@@ -21,6 +21,7 @@ void GameInput::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 	Input["Left"] = false;
 	Input["Up"] = false;
 	Input["Down"] = false;
+	Input["Jump"] = false;
 	Input["Menu"] = false;
 
 	if (keyCode == EventKeyboard::KeyCode::KEY_RIGHT_ARROW && !Input["Right"])
@@ -60,6 +61,16 @@ void GameInput::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 		Input["Down"] = true;
 	}
 
+	if (keyCode == EventKeyboard::KeyCode::KEY_SPACE && !Input["Jump"])
+	{
+		mainChar->MoveChar(MyAnimation::Player_Jump);
+		for (auto it = Input.begin(); it != Input.end(); ++it)
+		{
+			it->second = false;
+		}
+		Input["Jump"] = true;
+	}
+
 	if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE && !Input["Menu"])
 	{
 		//CCDirector::getInstance()->replaceScene(TransitionFade::create(2.0f, Test::createScene(), Color3B(0, 255, 255)));
@@ -92,6 +103,13 @@ void GameInput::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 		mainChar->MoveChar(MyAnimation::Player_idle);
 		Input["Down"] = false;
 	}
+
+	if (keyCode == EventKeyboard::KeyCode::KEY_SPACE && Input["Jump"])
+	{
+		mainChar->MoveChar(MyAnimation::Player_idle);
+		Input["Jump"] = false;
+	}
+
 	if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE && Input["Menu"])
 	{
 		Input["Menu"] = false;

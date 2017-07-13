@@ -6,10 +6,14 @@
 #include "GameInput.h"
 #include "TileMapManager.h"
 #include <unordered_map>
+#include "Box2D\Box2D.h"
+#include "Box2dDebugDraw.h"
+#include "MyContactListener.h"
 
 class LightEffect;
 class EffectSprite;
 class SimpleAudioEngine;
+class Node;
 
 using namespace cocos2d;
 
@@ -55,17 +59,44 @@ public:
 	// implement the "static create()" method manually
 	CREATE_FUNC(HelloWorld);
 
-	GameChar getChar()
+	/*GameChar getChar()
 	{
 		return mainChar;
-	}
+	}*/
+
+	void setViewPointCenter(CCPoint position);
+
+	void setPlayerPosition(Vec2 playerpos, double delta);
+
+	// box2d
+	void addBodyToWorld(b2World* world);
+	void addCircularFixtureToBody(float radius);
+	void addRectangularFixtureToBody(float width, float height);
+	void createFixture(b2Shape* shape);
+	void setProperties(ValueMap& properties);
+
+	void prepareLayers(TileMap* GameMap);
+
+	void createFixtures(CCTMXLayer * layer, TileMap* GameMap);
+
+	void createRectangularFixture(TMXLayer* layer, int x, int y, float width, float height, TileMap* GameMap);
+
+	void createPhysicalWorld();
+
+	void addObjects(TileMap* GameMap);
+
+	//virtual void draw(Renderer *renderer, const kmMat4& transform, bool transformUpdated);
+
+	void onDrawPrimitives(const kmMat4 &transform, bool transformUpdated);
+
+
 
 private:
 	GameChar mainChar;
 
 	GameInput mainInput;
 
-	TileMap GameMap;
+	TileMap* GameMap;
 
 	cocos2d::Vec3 _lightPos;
 	LightEffect *_effect;
@@ -86,8 +117,26 @@ private:
 	float brightness_;
 	float timer;
 
-	
+	bool playerMove;
 
+	Vec2 Gravity;
+
+	// box2d
+
+	b2World *_world;
+	b2Body *_groundBody;
+	b2Body *playerBody;
+	b2Fixture *_bottomFixture;
+	b2Fixture *_ballFixture;
+
+	b2Fixture *_playerFixture;
+
+	CustomCommand m_drawCommand;
+
+	MyContactListener contactlistner;
+
+	
+	
 };
 
 #endif // __HELLOWORLD_SCENE_H__

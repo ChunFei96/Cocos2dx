@@ -14,7 +14,8 @@ public:
 		Player_MoveLeft,
 		Player_climbUp,
 		Player_climbDown,
-		Player_idle
+		Player_idle,
+		Player_Jump
 	};
 
 	 Animate* RunAnimation(AllAnimation);

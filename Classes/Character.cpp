@@ -8,12 +8,16 @@ void GameChar::init(const char* chSource, const char* chName, float fX, float fY
 	mainSprite->setPosition(fX, fY);
 	mainSprite->setName(chName);
 	//intDir = 0;
-
-
-	
 	WorldSize = size;
 
 	fSpeed = 500;
+
+	remainingJumpSteps = 0;
+	m_jumpTimeout = 0;
+
+	jumpspeed = 1000;
+	hero_inMidAir_Up = false;
+	hero_inMidAir_Down = false;
 
 	mLoc.set(0.5f, 0.5f);
 	mLocInc.set(0.005f, 0.01f);
@@ -44,6 +48,38 @@ void GameChar::init(const char* chSource, const char* chName, float fX, float fY
 //	auto moveEvent = MoveBy::create(0.2f, Vec2(100.0f,0.0f));
 //	mainSprite->runAction(moveEvent);
 //}
+
+void GameChar::setPlayerPosition(Vec2 playerpos, TileMap *TileMap_, double delta)
+{
+	CCPoint tileCoord = TileMap_->tileCoordForPosition(playerpos);
+	int tileGid = TileMap_->getMeta()->tileGIDAt(tileCoord);
+	if (tileGid) {
+		ValueMap properties = TileMap_->getMap()->propertiesForGID(tileGid).asValueMap();
+		if (properties.size() > 0) 
+		{
+			hero_inMidAir_Up = false;
+			hero_inMidAir_Down = false;
+			return;
+		}
+		
+	}
+
+	mainSprite->setPosition(playerpos);
+}
+
+//void GameChar::addBodyToWorld(b2World* world)
+//{
+//	// let superclass to the work, we just need to set the player to be
+//	// a bullet so it doesn't fall through the world on huge updates
+//	self::addBodyToWorld(world);
+//	body->SetBullet(true);
+//}
+//
+//void GameChar::addFixturesToBody()
+//{
+//	this->addCircularFixtureToBody(0.7f);
+//}
+
 
 void GameChar::MoveChar(MyAnimation::AllAnimation Movement)
 {
@@ -165,72 +201,213 @@ void GameChar::CheckBoundary()
 			if (Player_animation == myAnimation->Player_Moveright) Player_animation = myAnimation->Player_idle;
 	}
 
-	if (mainSprite->getPosition().y <= 0)
+	if (mainSprite->getPosition().y <=0)
 	{
 		if (Player_animation == myAnimation->Player_climbDown) Player_animation = myAnimation->Player_idle;
 	}
-	else if (mainSprite->getPosition().y >= WorldSize.height - mainSprite->getTextureRect().getMaxY())
+	else if (mainSprite->getPosition().y >= (WorldSize.height - mainSprite->getTextureRect().getMaxY()))
 	{
 		if (Player_animation == myAnimation->Player_climbUp) Player_animation = myAnimation->Player_idle;
 	}
 }
 
 
-void GameChar::updateMovement(float delta)
+void GameChar::updateMovement(float delta, TileMap* Tilemap, b2Body* body, b2Fixture* paddleShapeDef, MyContactListener contactlistner)
 {
+	b2Vec2 vel = body->GetLinearVelocity();
+	b2Vec2 friction  = b2Vec2(paddleShapeDef->GetFriction(), 0);
+
+	CCPoint Playerpos = mainSprite->getPosition();
 	switch (Player_animation)
 	{
 	case MyAnimation::Player_Moveright:
 	{
-		auto moveEvent = MoveBy::create(0.0f, Vec2(1.0f, 0.0f) * fSpeed* delta);
-		mainSprite->runAction(moveEvent);
+		/*auto moveEvent = MoveBy::create(0.0f, Vec2(1.0f, 0.0f) * fSpeed* delta);
+		mainSprite->runAction(moveEvent);*/
+		//Playerpos.x += Tilemap->getMap()->getTileSize().width  * delta * 4;
+		vel.x = 5.0f;
+		/*friction.x = b2Max(friction.x -0.2f, 0.0f);*/
+		body->SetLinearVelocity(vel);
 	}
 	break;
 	case MyAnimation::Player_MoveLeft:
 	{
-		auto moveEvent = MoveBy::create(0.0f, Vec2(-1.0f, 0.0f) * fSpeed* delta);
-		mainSprite->runAction(moveEvent);
+		/*auto moveEvent = MoveBy::create(0.0f, Vec2(-1.0f, 0.0f) * fSpeed* delta);
+		mainSprite->runAction(moveEvent);*/
+		//Playerpos.x -= Tilemap->getMap()->getTileSize().width  * delta * 4;
+		vel.x = -5.0f;
+		/*friction.x = b2Max(friction.x - 0.2f, 0.0f);*/
+		body->SetLinearVelocity(vel);
+
 	}
 	break;
 	case MyAnimation::Player_climbUp:
 	{
-		auto moveEvent = MoveBy::create(0.0f, Vec2(0.0f, 1.0f) * fSpeed* delta);
-		mainSprite->runAction(moveEvent);
+		/*auto moveEvent = MoveBy::create(0.0f, Vec2(0.0f, 1.0f) * fSpeed* delta);
+		mainSprite->runAction(moveEvent);*/
+		//Playerpos.y += Tilemap->getMap()->getTileSize().width  * delta * 4;
+		vel.y = 5.0f;
+		body->SetLinearVelocity(vel);
 	}
 	break;
 	case MyAnimation::Player_climbDown:
 	{
-		auto moveEvent = MoveBy::create(0.0f, Vec2(0.0f, -1.0f) * fSpeed* delta);
-		mainSprite->runAction(moveEvent);
+		/*auto moveEvent = MoveBy::create(0.0f, Vec2(0.0f, -1.0f) * fSpeed* delta);
+		mainSprite->runAction(moveEvent);*/
+		Playerpos.y -= Tilemap->getMap()->getTileSize().width  * delta * 4;
 
+	}
+	break;
+	case MyAnimation::Player_Jump:
+	{
+		if (contactlistner.getnumFootContacts() < 1) break;
+		if (m_jumpTimeout > 0) break;
+		vel.y = 8;
+		body->SetLinearVelocity(vel);
+		m_jumpTimeout = 15;
 	}
 	break;
 	case MyAnimation::Player_idle:
 	{
-
 		Stop();
 	}
 
 	break;
 	}
 
+	if (vel.x > 0)
+		vel.x = b2Max(vel.x - friction.x, 0.0f);
+	else if(vel.x <0)
+		vel.x = b2Min(vel.x + friction.x, 0.0f);
 
+	body->SetLinearVelocity(vel);
+	//this->setPlayerPosition(Playerpos, Tilemap, delta);
+
+
+}
+
+// Returns true if the player is on ground
+bool GameChar::isOnGround(void)
+{
+	if (hero_inMidAir_Up == false && hero_inMidAir_Down == false)
+		return true;
+	return false;
+}
+// Returns true if the player is jumping upwards
+bool GameChar::isJumpUpwards(void)
+{
+	if (hero_inMidAir_Up == true && hero_inMidAir_Down == false)
+		return true;
+	return false;
+}
+// Returns true if the player is on freefall
+bool GameChar::isFreeFall(void)
+{
+	if (hero_inMidAir_Up == false && hero_inMidAir_Down == true)
+		return true;
+	return false;
+}
+// Set the player's status to free fall mode
+void GameChar::SetOnFreeFall(bool isOnFreeFall)
+{
+	if (isOnFreeFall == true)
+	{
+		hero_inMidAir_Up = false;
+		hero_inMidAir_Down = true;
+		jumpspeed = 0;
+	}
+}
+
+// Set the player to jumping upwards
+void GameChar::SetToJumpUpwards(bool isOnJumpUpwards, b2Body* body, b2Vec2 vel)
+{
+	if (isOnJumpUpwards == true)
+	{
+		vel.y = 10;//upwards - don't change x velocity
+		body->SetLinearVelocity(vel);
+		//if (hero_inMidAir_Up == false && hero_inMidAir_Down == false)
+		//{
+		//	hero_inMidAir_Up = true;
+		//	hero_inMidAir_Down = false;
+		//	jumpspeed = 20;
+		//}
+
+	}
+}
+
+// Set Jumpspeed of the player
+void GameChar::SetJumpspeed(int jumpspeed)
+{
+	this->jumpspeed = jumpspeed;
+}
+
+// Get Jumpspeed of the player
+int GameChar::GetJumpspeed(void)
+{
+	return jumpspeed;
+}
+
+// Stop the player's movement
+void GameChar::SetToStop(void)
+{
+	hero_inMidAir_Up = false;
+	hero_inMidAir_Down = false;
+	jumpspeed = 0;
+}
+
+// Update Jump Upwards
+void GameChar::UpdateJumpUpwards(Vec2 playerpos, TileMap *TileMap_, double delta)
+{
+	if (hero_inMidAir_Up == true && hero_inMidAir_Down == false)
+	{
+		playerpos.y += jumpspeed;
+		jumpspeed -= 1;
+		if (jumpspeed == 0) 
+		{
+			hero_inMidAir_Up = false;
+			hero_inMidAir_Down = true;
+		}
+	}
+	this->setPlayerPosition(playerpos, TileMap_, delta);
+	
+}
+
+// Update FreeFall
+void GameChar::UpdateFreeFall(Vec2 playerpos, TileMap *TileMap_, double delta)
+{
+	if (hero_inMidAir_Up == false && hero_inMidAir_Down == true)
+	{
+		playerpos.y -= jumpspeed;
+		jumpspeed += 1;
+	}
+
+	CCPoint tileCoord = TileMap_->tileCoordForPosition(playerpos);
+	int tileGid = TileMap_->getMeta()->tileGIDAt(tileCoord);
+	if (tileGid) {
+		ValueMap properties = TileMap_->getMap()->propertiesForGID(tileGid).asValueMap();
+		if (properties.size() > 0)
+		{
+			hero_inMidAir_Up = false;
+			hero_inMidAir_Down = false;
+			return;
+		}
+
+	}
+
+
+	this->setPlayerPosition(playerpos, TileMap_, delta);
 }
 
 
 void GameChar::Update(float delta)
 {
-	updateMovement(delta);
 	CheckBoundary();
-
-
+	m_jumpTimeout--;
 	//GLProgramState* state = GLProgramState::getOrCreateWithGLProgram(shaderCharEffect);
 	//mainSprite->setGLProgram(shaderCharEffect);
 	//mainSprite->setGLProgramState(state);
 	//state->setUniformVec2("loc", mLoc);
-
-
-
+	
 }
 
 void GameChar::Stop(void)
