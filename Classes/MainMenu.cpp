@@ -59,7 +59,7 @@ bool MainMenu::init()
 	rendtexSprite->setGLProgram(proPostProcess);
 	this->addChild(rendtexSprite, 2);
 
-	//this->addChild(map, 0);
+	this->addChild(map, 0);
 
 	
 	// Key Press & Key Release
