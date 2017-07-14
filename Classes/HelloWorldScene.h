@@ -108,6 +108,7 @@ private:
 	std::unordered_map<const char*, bool> Input;
 
 	Size worldSize;
+	Size visibleSize;
 
 	GLProgram* proPostProcess;
 	RenderTexture *rendtex;

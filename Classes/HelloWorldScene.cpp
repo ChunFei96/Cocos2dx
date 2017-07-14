@@ -44,7 +44,7 @@ bool HelloWorld::init()
 
 	GameMap->init("Level_test.tmx");
 
-	auto visibleSize = Director::getInstance()->getVisibleSize();
+	visibleSize = Director::getInstance()->getVisibleSize();
 
 	worldSize = GameMap->GetSize();
 
@@ -194,13 +194,13 @@ bool HelloWorld::init()
 	groundBody->CreateFixture(&boxShapeDef);*/
 
 	// left wall
-	groundEdge.Set(b2Vec2(0, 0), b2Vec2(0, visibleSize.height / PTM_RATIO));
+	groundEdge.Set(b2Vec2(0, 0), b2Vec2(0, visibleSize.height / PTM_RATIO ));
 	groundBody->CreateFixture(&boxShapeDef);
 
-	// top wall
-	groundEdge.Set(b2Vec2(0, 1000 / PTM_RATIO),
-		b2Vec2(visibleSize.width / PTM_RATIO, 1000 / PTM_RATIO));
-	groundBody->CreateFixture(&boxShapeDef);
+	// //top wall
+	//groundEdge.Set(b2Vec2(0, 1000 / PTM_RATIO),
+	//	b2Vec2(visibleSize.width / PTM_RATIO, 1000 / PTM_RATIO));
+	//groundBody->CreateFixture(&boxShapeDef);
 
 	/*groundEdge.Set(b2Vec2(visibleSize.width / PTM_RATIO, visibleSize.height / PTM_RATIO),
 		b2Vec2(visibleSize.width / PTM_RATIO, 0));
@@ -623,6 +623,7 @@ const float kGravity = -kPixelsPerMeter / 0.7f; // adjust this to taste
 //
 void HelloWorld::createFixtures(CCTMXLayer * layer, TileMap* GameMap)
 {
+	Vec2 scaleFactor = Vec2( 1920.0f / 1024.0f, 1080.0f / 648.0f );
 	// create all the rectangular fixtures for each tile
 	Size layerSize = layer->getLayerSize();
 	for (int y = 0; y < layerSize.height; y++)
@@ -633,6 +634,7 @@ void HelloWorld::createFixtures(CCTMXLayer * layer, TileMap* GameMap)
 			auto tileSprite = layer->getTileAt(Point(x, y));
 			if (tileSprite)
 			{
+				//this->setScale(scaleFactor.x, scaleFactor.y);
 				this->createRectangularFixture(layer, x, y, 1.1f, 1.1f, GameMap);
 			}
 
@@ -644,7 +646,7 @@ void HelloWorld::createFixtures(CCTMXLayer * layer, TileMap* GameMap)
 void HelloWorld::createRectangularFixture(TMXLayer* layer, int x, int y, float width, float height,TileMap* GameMap)
 {
 	// get position & size
-	auto p = (layer->getPositionAt(Point(x, y))) - Vec2(25,33);
+	auto p = (layer->getPositionAt(Point(x, y))) - Vec2(25,40);
 	auto tileSize = GameMap->getMap()->getTileSize();
 	const float pixelsPerMeter = 50.0f;
 
@@ -663,8 +665,8 @@ void HelloWorld::createRectangularFixture(TMXLayer* layer, int x, int y, float w
 	// define the shape
 	b2PolygonShape shape;
 	shape.SetAsBox(
-		(tileSize.width / pixelsPerMeter) * 0.4f * width,
-		(tileSize.height / pixelsPerMeter) * 0.6f * height
+		(tileSize.width / pixelsPerMeter) * 1.f * width,
+		(tileSize.height / pixelsPerMeter) * 1.5f * height
 	);
 
 	// create the fixture

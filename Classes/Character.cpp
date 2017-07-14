@@ -225,7 +225,7 @@ void GameChar::updateMovement(float delta, TileMap* Tilemap, b2Body* body, b2Fix
 		/*auto moveEvent = MoveBy::create(0.0f, Vec2(1.0f, 0.0f) * fSpeed* delta);
 		mainSprite->runAction(moveEvent);*/
 		//Playerpos.x += Tilemap->getMap()->getTileSize().width  * delta * 4;
-		vel.x = 5.0f;
+		vel.x = 8.0f;
 		/*friction.x = b2Max(friction.x -0.2f, 0.0f);*/
 		body->SetLinearVelocity(vel);
 	}
@@ -235,7 +235,7 @@ void GameChar::updateMovement(float delta, TileMap* Tilemap, b2Body* body, b2Fix
 		/*auto moveEvent = MoveBy::create(0.0f, Vec2(-1.0f, 0.0f) * fSpeed* delta);
 		mainSprite->runAction(moveEvent);*/
 		//Playerpos.x -= Tilemap->getMap()->getTileSize().width  * delta * 4;
-		vel.x = -5.0f;
+		vel.x = -8.0f;
 		/*friction.x = b2Max(friction.x - 0.2f, 0.0f);*/
 		body->SetLinearVelocity(vel);
 
@@ -246,7 +246,7 @@ void GameChar::updateMovement(float delta, TileMap* Tilemap, b2Body* body, b2Fix
 		/*auto moveEvent = MoveBy::create(0.0f, Vec2(0.0f, 1.0f) * fSpeed* delta);
 		mainSprite->runAction(moveEvent);*/
 		//Playerpos.y += Tilemap->getMap()->getTileSize().width  * delta * 4;
-		vel.y = 5.0f;
+		vel.y = 8.0f;
 		body->SetLinearVelocity(vel);
 	}
 	break;
@@ -262,7 +262,7 @@ void GameChar::updateMovement(float delta, TileMap* Tilemap, b2Body* body, b2Fix
 	{
 		if (contactlistner.getnumFootContacts() < 1) break;
 		if (m_jumpTimeout > 0) break;
-		vel.y = 8;
+		vel.y = 12;
 		body->SetLinearVelocity(vel);
 		m_jumpTimeout = 15;
 	}
@@ -401,7 +401,7 @@ void GameChar::UpdateFreeFall(Vec2 playerpos, TileMap *TileMap_, double delta)
 
 void GameChar::Update(float delta)
 {
-	CheckBoundary();
+	//CheckBoundary();
 	m_jumpTimeout--;
 	//GLProgramState* state = GLProgramState::getOrCreateWithGLProgram(shaderCharEffect);
 	//mainSprite->setGLProgram(shaderCharEffect);

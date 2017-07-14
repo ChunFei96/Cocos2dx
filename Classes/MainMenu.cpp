@@ -65,6 +65,7 @@ bool MainMenu::init()
 	// Key Press & Key Release
 
 	auto startButton = ui::Button::create("button_start-game.png", "button_start-game.png", "button_start-game.png");
+	startButton->setScale(visibleSize.height * 0.1 / startButton->getContentSize().height);
 	startButton->setActionTag(ACTION_PLAY);
 	startButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 - 50));
 	startButton->addTouchEventListener(CC_CALLBACK_1(MainMenu::onButtonPressed, this));
