@@ -31,8 +31,8 @@ bool HelloWorld::init()
 		return false;
 	}
 
-
 	//audioInit();
+
 
 	lightInit();
 
@@ -42,7 +42,7 @@ bool HelloWorld::init()
 
 	GameMap = new TileMap();
 
-	GameMap->init("Level_test.tmx");
+	GameMap->init("Level_Test.tmx");
 
 	visibleSize = Director::getInstance()->getVisibleSize();
 
@@ -285,6 +285,19 @@ bool HelloWorld::init()
 	//this->runAction(CCFollow::create(rendtexSprite, GameMap->getMap()->boundingBox()));
 	this->runAction(CCFollow::create(mainChar.getSprite(), GameMap->getMap()->boundingBox()));
 
+	//AI
+
+	Vec2 AI_SpawnPoint = GameMap->GetObjectPosition("Object", "AI_1");
+	Vec2 AI_WayPoints[2];
+	AI_WayPoints[0] = GameMap->GetObjectPosition("Object", "1_0");
+	AI_WayPoints[1] = GameMap->GetObjectPosition("Object", "1_1");
+
+
+	TestAI.SetWayPoint(AI_WayPoints);
+
+	TestAI.init(AI_SpawnPoint.x, AI_SpawnPoint.y,"Blue_Front1.png", "Test");
+	this->addChild(TestAI.getSprite(), 4);
+
 	//// 
 	//for (int i = 0; ; i++)
 	//{
@@ -303,7 +316,8 @@ bool HelloWorld::init()
 	//break;
 	//}
 	//}
-	playerMove = true;
+
+	//playerMove = true;
 	
 	//input
 	mainInput.initChar(&mainChar);
@@ -488,7 +502,7 @@ void HelloWorld::lightUpdate(float dt)
 
 void HelloWorld::update(float delta)
 {
-	
+
 	mainChar.Update(delta);
 	//setPlayerPosition(mainChar.getPos(),delta);
 	lightUpdate(delta);
@@ -538,6 +552,69 @@ void HelloWorld::update(float delta)
 
 		}
 	}
+
+	TestAI.SetPlayerPos(mainChar.getPos().x, mainChar.getPos().y);
+	TestAI.update(delta);
+
+	//std::stringstream ss;
+	//ss << TestAI.Projectiles.size();
+	//CCLOG(ss.str().c_str());
+	
+
+	for (std::vector<Projectile*>::iterator iter = TestAI.Projectiles.begin(); iter != TestAI.Projectiles.end();)
+	{
+		Projectile *spriteTemp = dynamic_cast<Projectile*>(*iter);
+
+		if (spriteTemp->getID() == Projectile::IDStatus::AI)
+		{
+
+		/*	std::stringstream ss;
+			ss << "this Angle : ";
+			CCLOG(ss.str().c_str());*/
+
+			spriteTemp->update(delta);
+
+			if (spriteTemp->getLifeTime() < 0.f)
+			{
+				this->removeChild(spriteTemp->getSprite(), true);
+				delete *iter;
+				iter = TestAI.Projectiles.erase(iter);
+			}
+			else
+			{
+				++iter;
+			}
+		}
+		//this->addChild(spriteTemp->getSprite(), 5);
+
+	}
+
+
+
+
+	//CCObject* it = NULL;
+
+	//if (Projectiles->data != nullptr && Projectiles != nullptr)
+	//{
+	//	CCARRAY_FOREACH(Projectiles, it)
+	//	{
+	//		Projectile *Project = dynamic_cast<Projectile*>(it);
+
+	//		Project->update(delta);
+
+
+	//		std::stringstream ss;
+	//		ss << "this Angle : ";
+	//		CCLOG(ss.str().c_str());
+
+
+	//		if (Project->getLifeTime() < 0.f)
+	//		{
+	//			Project->getSprite()->removeFromParentAndCleanup(true);
+	//		}
+
+	//	}
+	//}
 
 	/*rendtex->beginWithClear(0.0f, 0.0f, 0.0f, 0.0f);
 	

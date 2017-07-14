@@ -15,7 +15,10 @@ public:
 		Player_climbUp,
 		Player_climbDown,
 		Player_idle,
-		Player_Jump
+		Player_Jump,
+		Wolf_idle,
+		Wolf_MoveRight,
+		Wolf_MoveLeft
 	};
 
 	 Animate* RunAnimation(AllAnimation);

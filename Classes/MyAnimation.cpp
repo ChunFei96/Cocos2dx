@@ -85,6 +85,36 @@ Animate* MyAnimation::RunAnimation(AllAnimation n)
 		animFrames.pushBack(SpriteFrame::create("Idle__009.png", Rect(0, 0, 46 * scalorFactor, 76 * scalorFactor)));
 	}
 	break;
+	case MyAnimation::Wolf_idle:
+	{
+		animFrames.reserve(4);
+		animFrames.pushBack(SpriteFrame::create("Blue_Front1.png", Rect(0, 0, 50 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Front2.png", Rect(0, 0, 50 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Front1.png", Rect(0, 0, 50 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Front3.png", Rect(0, 0, 50 * scalorFactor, 62 * scalorFactor)));
+	}
+	break;
+
+	case MyAnimation::Wolf_MoveRight:
+	{
+		animFrames.reserve(4);
+		animFrames.pushBack(SpriteFrame::create("Blue_Right1.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Right2.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Right1.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Right3.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+	}
+	break;
+
+	case MyAnimation::Wolf_MoveLeft:
+	{
+		animFrames.reserve(4);
+		animFrames.pushBack(SpriteFrame::create("Blue_Left1.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Left2.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Left1.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+		animFrames.pushBack(SpriteFrame::create("Blue_Left3.png", Rect(0, 0, 45 * scalorFactor, 62 * scalorFactor)));
+	}
+	break;
+
 	}
 
 	Animation* animation = Animation::createWithSpriteFrames(animFrames, 0.1f);
